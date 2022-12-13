@@ -1,15 +1,125 @@
-// Copyright (c) FIRST and other WPILib contributors.
-// Open Source Software; you can modify and/or share it under the terms of
-// the WPILib BSD license file in the root directory of this project.
-
 package frc.robot;
 
-/**
- * The Constants class provides a convenient place for teams to hold robot-wide numerical or boolean
- * constants. This class should not be used for any other purpose. All constants should be declared
- * globally (i.e. public static). Do not put anything functional in this class.
- *
- * <p>It is advised to statically import this class (or one of its inner classes) wherever the
- * constants are needed, to reduce verbosity.
- */
-public final class Constants {}
+import edu.wpi.first.math.geometry.Translation2d;
+import edu.wpi.first.math.kinematics.SwerveDriveKinematics;
+import edu.wpi.first.math.trajectory.TrapezoidProfile;
+import edu.wpi.first.math.util.Units;
+
+public class Constants {
+    @SuppressWarnings("unused")
+    public enum EncoderType {
+        Potentiometer, CanCoder
+    }
+    //--------------------------------------------------------------------------------------------
+    //      Notes:
+    //-If we get new wheels, edit kWheelDiameterMeters
+    //--------------------------------------------------------------------------------------------
+
+    /**
+     * The encoder type we are using for the swerve
+     * Options: CanCoder, Potentiometer
+     */
+    public static final EncoderType kEncoderType = EncoderType.CanCoder;
+    //If using the Potentiometer, this specifies its max value so we can get the angle
+    public static final double potMax = 3798;
+
+    public static final double neoMaxRPM = 5000; //5000 was experimentally determined from our swerve chassis
+
+
+    //Checked and verified as of May 1st, 2022
+    public static final class ModuleConstants {
+        public static final double kWheelDiameterMeters = Units.inchesToMeters(4); //4 when new
+        public static final double kDriveMotorGearRatio = 2 / 15.0; // 12:30 then 15:45
+        public static final double kDriveEncoderRot2Meter = kDriveMotorGearRatio * Math.PI * kWheelDiameterMeters;
+        public static final double kDriveEncoderRPM2MeterPerSec = kDriveEncoderRot2Meter / 60.0;
+
+        //These were calculated for our swerve modules, but position PID based on the angle means they aren't needed
+        //public static final double kTurningMotorGearRatio = 0.036; // 12:100 then 18:60
+        //public static final double kTurningEncoderRot2Rad = kTurningMotorGearRatio * 2 * Math.PI;
+        //public static final double kTurningEncoderRPM2RadPerSec = kTurningEncoderRot2Rad / 60,0;
+
+        //These values will need to be calibrated when swapping between CANCoders and Potentiometers
+        public static final double kPTurning = 1.0;
+        public static final double kITurning = 0.0005;
+        public static final double kDTurning = 0.0;
+        public static final double kFTurning = 0.0;
+    }
+
+    //Checked and verified as of May 1st, 2022
+    public static final class DriveConstants {
+        // Distance between right and left wheels
+        public static final double kTrackWidth = Units.inchesToMeters(19.5);
+        // Distance between front and back wheels
+        public static final double kWheelBase = Units.inchesToMeters(19.5);
+
+        public static final SwerveDriveKinematics kDriveKinematics = new SwerveDriveKinematics(
+                new Translation2d(kWheelBase / 2, kTrackWidth / 2),  //Left Front
+                new Translation2d(kWheelBase / 2, -kTrackWidth / 2),  //Right Front
+                new Translation2d(-kWheelBase / 2, -kTrackWidth / 2),  //Right Back
+                new Translation2d(-kWheelBase / 2, kTrackWidth / 2)   //Left Back
+        );
+
+        public static final int kFrontLeftDriveMotorPort = 1;
+        public static final int kFrontRightDriveMotorPort = 2;
+        public static final int kBackRightDriveMotorPort = 3;
+        public static final int kBackLeftDriveMotorPort = 4;
+
+        public static final int kFrontLeftTurningMotorPort = 1;
+        public static final int kFrontRightTurningMotorPort = 2;
+        public static final int kBackRightTurningMotorPort = 3;
+        public static final int kBackLeftTurningMotorPort = 4;
+
+        public static final int kFrontLeftTurningEncoderPort = 5;
+        public static final int kFrontRightTurningEncoderPort = 6;
+        public static final int kBackRightTurningEncoderPort = 7;
+        public static final int kBackLeftTurningEncoderPort = 8;
+
+        public static final int kFrontLeftDriveAbsoluteEncoderPort = 0;
+        public static final int kFrontRightDriveAbsoluteEncoderPort = 1;
+        public static final int kBackRightDriveAbsoluteEncoderPort = 2;
+        public static final int kBackLeftDriveAbsoluteEncoderPort = 3;
+
+        public static final double kFrontLeftDriveAbsoluteEncoderOffsetRad = 0;
+        public static final double kFrontRightDriveAbsoluteEncoderOffsetRad = 0;
+        public static final double kBackRightDriveAbsoluteEncoderOffsetRad = 0;
+        public static final double kBackLeftDriveAbsoluteEncoderOffsetRad = 0;
+
+        public static final double kPhysicalMaxSpeedMetersPerSecond = (neoMaxRPM / 60.0) * ModuleConstants.kDriveEncoderRot2Meter; //~3.56 m/s
+        public static final double kPhysicalMaxAngularSpeedRadiansPerSecond = 2 * Math.PI; //About 2pi given wheelbase and drive speed
+
+        public static final double kTeleDriveMaxSpeedMetersPerSecond = kPhysicalMaxSpeedMetersPerSecond; //we have about 11.68 ft/s, we don't need to reduce it
+        public static final double kTeleDriveMaxAngularSpeedRadiansPerSecond = kPhysicalMaxAngularSpeedRadiansPerSecond; //360 degrees per second doesn't need to be reduced
+        //These values could be tuned:
+        public static final double kTeleDriveMaxAccelerationUnitsPerSecond = 1.5;
+        public static final double kTeleDriveMaxAngularAccelerationUnitsPerSecond = 1.5;
+    }
+
+    //Checked and verified as of May 1st, 2022
+    public static final class AutoConstants {
+        public static final double kMaxSpeedMetersPerSecond = 2.0;
+        public static final double kMaxAngularSpeedRadiansPerSecond = DriveConstants.kPhysicalMaxAngularSpeedRadiansPerSecond; //2Pi
+        //All the following Constants can be tuned:
+        public static final double kMaxAccelerationMetersPerSecondSquared = 1.5;
+        public static final double kMaxAngularAccelerationRadiansPerSecondSquared = 2 * Math.PI;
+        public static final double kPXController = 1.5;
+        public static final double kPYController = 1.5;
+        public static final double kPThetaController = 3.0;
+
+        public static final TrapezoidProfile.Constraints kThetaControllerConstraints =
+                new TrapezoidProfile.Constraints(
+                        kMaxAngularSpeedRadiansPerSecond,
+                        kMaxAngularAccelerationRadiansPerSecondSquared);
+    }
+
+    //Checked and verified as of May 1st, 2022
+    public static final class OIConstants {
+        public static final int kDriverJoyID = 0;
+        public static final int kDriverXL = 0;
+        public static final int kDriverYL = 1;
+        public static final int kDriverXR = 4;
+        public static final int kDriverYR = 5;
+        public static final double driverEXP = 7 / 3.0; //Exponentiate the joystick values to have finer control at low values
+
+        public static final double kDeadband = 0.04; //Higher than average on the controller I'm using
+    }
+}
