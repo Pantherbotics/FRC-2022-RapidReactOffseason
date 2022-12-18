@@ -14,7 +14,8 @@ import edu.wpi.first.wpilibj.AnalogInput;
 
 import edu.wpi.first.wpilibj.RobotController;
 import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
-import frc.robot.Constants;
+import frc.robot.Constants.DriveConstants;
+import frc.robot.Constants.ModuleConstants;
 
 public class SwerveModule {
     //Drive objects
@@ -32,8 +33,8 @@ public class SwerveModule {
         //Create the SparkMax for the drive motor, and configure the units for its encoder
         driveMotor = new CANSparkMax(driveMotorID, CANSparkMaxLowLevel.MotorType.kBrushless);
         driveEncoder = driveMotor.getEncoder();
-        driveEncoder.setPositionConversionFactor(Constants.ModuleConstants.kDriveEncoderRot2Meter);
-        driveEncoder.setVelocityConversionFactor(Constants.ModuleConstants.kDriveEncoderRPM2MeterPerSec);
+        driveEncoder.setPositionConversionFactor(ModuleConstants.kDriveEncoderRot2Meter);
+        driveEncoder.setVelocityConversionFactor(ModuleConstants.kDriveEncoderRPM2MeterPerSec);
 
         //Create the CANCoder and configure it to work as the RemoteSensor0 for the turning motor
         turningEncoder = new CANCoder(turningEncoderID);
@@ -41,30 +42,33 @@ public class SwerveModule {
         //Create the turning TalonSRX
         turningMotor = new TalonSRX(turningMotorID);
         turningMotor.configRemoteFeedbackFilter(turningEncoder, 0);
-        turningMotor.config_kP(0, Constants.ModuleConstants.kPTurning);
-        turningMotor.config_kI(0, Constants.ModuleConstants.kITurning);
-        turningMotor.config_kD(0, Constants.ModuleConstants.kDTurning);
-        turningMotor.config_kF(0, Constants.ModuleConstants.kFTurning);
+        turningMotor.config_kP(0, ModuleConstants.kPTurning);
+        turningMotor.config_kI(0, ModuleConstants.kITurning);
+        turningMotor.config_kD(0, ModuleConstants.kDTurning);
+        turningMotor.config_kF(0, ModuleConstants.kFTurning);
         turningMotor.setSelectedSensorPosition(turningEncoder.getAbsolutePosition());
         //Create PID Controller for turning motor
-        turningPIDController = new PIDController(Constants.ModuleConstants.kPTurning, 0, 0);
+        turningPIDController = new PIDController(ModuleConstants.kPTurning, 0, 0);
         turningPIDController.enableContinuousInput(-Math.PI, Math.PI);
 
         absoluteEncoder = new AnalogInput(absoluteEncoderID);
         absoluteEncoderOffsetRad = absoluteEncoderOffset;
+
+        resetEncoders();
     }
 
     public double getDrivePosition() {
         return driveEncoder.getPosition();
     }
 
+    public double getDriveVelocity() {
+        return driveEncoder.getVelocity();
+    }
+
     public double getTurningPosition() {
         return turningEncoder.getPosition();
     }
 
-    public double getDriveVelocity() {
-        return driveEncoder.getVelocity();
-    }
 
     public double getTurningVelocity() {
         return turningEncoder.getVelocity();
@@ -93,7 +97,7 @@ public class SwerveModule {
         }
 
         state = SwerveModuleState.optimize(state, getState().angle);
-        driveMotor.set(state.speedMetersPerSecond / Constants.DriveConstants.kPhysicalMaxSpeedMetersPerSecond);
+        driveMotor.set(state.speedMetersPerSecond / DriveConstants.kPhysicalMaxSpeedMetersPerSecond);
         double position = turningPIDController.calculate(getTurningPosition(), state.angle.getRadians());
         turningMotor.set(ControlMode.Position, position);
         SmartDashboard.putString("Swerve[" + absoluteEncoder.getChannel() + "] state", state.toString());
